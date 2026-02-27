@@ -1,112 +1,161 @@
 import streamlit as st
-from fpdf import FPDF
 import re
+from fpdf import FPDF
 
-st.set_page_config(page_title="EduNote AI", layout="wide")
+# -------------------------------------------------
+# Page Config
+# -------------------------------------------------
+st.set_page_config(page_title="EduNoteAI", layout="wide")
+st.title("🎓 EduNoteAI – Smart Lecture Notes Generator")
+st.subheader("Lecture Text → Structured Smart Notes")
 
-st.title("🎓 EduNote AI")
-st.subheader("Lecture Text → Smart Notes Generator")
-
-# -----------------------------
+# -------------------------------------------------
 # Text Cleaning
-# -----------------------------
+# -------------------------------------------------
 def clean_text(text):
-    text = text.replace('"', '')
     text = re.sub(r'\s+', ' ', text)
-    return text.strip()
+    text = text.strip()
+    return text
 
-# -----------------------------
-# Smart Sentence Split
-# -----------------------------
-def split_sentences(text):
-    # Avoid breaking decimal numbers like 3.13
-    text = re.sub(r'(\d)\.(\d)', r'\1<dot>\2', text)
-    sentences = re.split(r'\.\s+', text)
-    sentences = [s.replace('<dot>', '.') for s in sentences]
-    return [s.strip() for s in sentences if s.strip()]
-
-# -----------------------------
-# Summary
-# -----------------------------
+# -------------------------------------------------
+# Smart Summary Generator
+# -------------------------------------------------
 def generate_summary(text):
-    sentences = split_sentences(text)
-    return ". ".join(sentences[:3]) + "."
+    sentences = text.split(". ")
+    summary = ". ".join(sentences[:3])
+    return summary.strip() + "."
 
-# -----------------------------
-# Key Points
-# -----------------------------
+# -------------------------------------------------
+# Key Points Generator
+# -------------------------------------------------
 def generate_keypoints(text):
-    sentences = split_sentences(text)
-    key_points = sentences[:5]
-    return "\n".join([f"• {point}" for point in key_points])
+    sentences = text.split(". ")
+    keypoints = []
 
-# -----------------------------
+    for sentence in sentences:
+        sentence = sentence.strip()
+        if len(sentence) > 50:
+            keypoints.append("• " + sentence)
+
+        if len(keypoints) == 6:
+            break
+
+    return "\n".join(keypoints)
+
+# -------------------------------------------------
+# Important Terms Extractor
+# -------------------------------------------------
+def extract_important_terms(text):
+    words = text.split()
+    terms = []
+
+    for word in words:
+        clean_word = re.sub(r'[^A-Za-z]', '', word)
+
+        if clean_word.istitle() and len(clean_word) > 4:
+            if clean_word not in terms:
+                terms.append(clean_word)
+
+        if len(terms) == 5:
+            break
+
+    return ", ".join(terms)
+
+# -------------------------------------------------
 # Quiz Generator
-# -----------------------------
+# -------------------------------------------------
 def generate_quiz(text):
-    sentences = split_sentences(text)
+    keywords = []
+    words = text.split()
+
+    for word in words:
+        clean_word = re.sub(r'[^A-Za-z]', '', word)
+
+        if clean_word.istitle() and len(clean_word) > 4:
+            if clean_word not in keywords:
+                keywords.append(clean_word)
+
+        if len(keywords) == 3:
+            break
+
     questions = []
+    for word in keywords:
+        questions.append(f"1. What is the significance of {word} in this topic?")
 
-    for i, sentence in enumerate(sentences[:3]):
-        words = sentence.split()
-        if len(words) > 4:
-            keyword = words[0]
-            question = f"{i+1}. Explain the concept of '{keyword}' in the lecture."
-            questions.append(question)
+    return "\n\n".join(questions)
 
-    return "\n".join(questions)
-
-# -----------------------------
+# -------------------------------------------------
 # PDF Generator
-# -----------------------------
+# -------------------------------------------------
 def generate_pdf(content):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
     pdf.multi_cell(0, 8, content)
-    file_path = "Lecture_Notes.pdf"
+
+    file_path = "Smart_Lecture_Notes.pdf"
     pdf.output(file_path)
     return file_path
 
-# -----------------------------
-# UI
-# -----------------------------
+# -------------------------------------------------
+# User Input
+# -------------------------------------------------
 lecture_text = st.text_area("📚 Paste Your Lecture Text Here", height=250)
 
 if st.button("Generate Smart Notes"):
 
     if lecture_text.strip() == "":
-        st.warning("Please paste lecture text.")
+        st.warning("Please paste lecture text first.")
     else:
         cleaned = clean_text(lecture_text)
 
-        st.subheader("📄 Cleaned Text")
+        summary = generate_summary(cleaned)
+        keypoints = generate_keypoints(cleaned)
+        terms = extract_important_terms(cleaned)
+        quiz = generate_quiz(cleaned)
+
+        # -------------------------------------------------
+        # Display Output
+        # -------------------------------------------------
+        st.markdown("## 📄 Cleaned Text")
         st.write(cleaned)
 
-        st.subheader("📝 Summary")
-        summary = generate_summary(cleaned)
+        st.markdown("## 📝 Smart Summary")
         st.write(summary)
 
-        st.subheader("📌 Key Points")
-        keypoints = generate_keypoints(cleaned)
-        st.write(keypoints)
+        st.markdown("## 📌 Key Concepts")
+        st.text(keypoints)
 
-        st.subheader("❓ Quiz Questions")
-        quiz = generate_quiz(cleaned)
-        st.write(quiz)
+        st.markdown("## 🧠 Important Terms")
+        st.write(terms)
 
-        full_content = f"""
+        st.markdown("## ❓ Quiz Questions")
+        st.text(quiz)
+
+        # -------------------------------------------------
+        # PDF Download
+        # -------------------------------------------------
+        if st.button("Download as PDF"):
+            full_content = f"""
+SMART LECTURE NOTES
+
 SUMMARY:
 {summary}
 
 KEY POINTS:
 {keypoints}
 
-QUIZ:
+IMPORTANT TERMS:
+{terms}
+
+QUIZ QUESTIONS:
 {quiz}
 """
-
-        if st.button("Download Notes as PDF"):
             pdf_file = generate_pdf(full_content)
+
             with open(pdf_file, "rb") as f:
-                st.download_button("Click Here to Download", f, file_name="Lecture_Notes.pdf")
+                st.download_button(
+                    "Click to Download PDF",
+                    f,
+                    file_name="Smart_Lecture_Notes.pdf"
+                )
