@@ -33,26 +33,32 @@ def clean_text(text):
 # -----------------------------------------
 # AI Generator
 # -----------------------------------------
-def generate_output(prompt, max_len=250):
+def summarize_text(text, max_len=200):
+    prompt = f"summarize: {text}"
+
     inputs = tokenizer(
         prompt,
         return_tensors="pt",
-        max_length=1024,
+        max_length=512,
         truncation=True
     )
 
-  output_ids = model.generate (
-    inputs.input_ids,
-    max_length=max_len,
-    min_length=60,
-    num_beams=3,
-    no_repeat_ngram_size=2,
-    repetition_penalty=1.2,
-    early_stopping=True
-)
+    output_ids = model.generate(
+        inputs["input_ids"],
+        max_length=max_len,
+        min_length=60,
+        num_beams=3,
+        no_repeat_ngram_size=2,
+        repetition_penalty=1.2,
+        early_stopping=True
+    )
 
+    summary = tokenizer.decode(
+        output_ids[0],
+        skip_special_tokens=True
+    )
 
-    return tokenizer.decode(output_ids[0], skip_special_tokens=True)
+    return summary
 
 # -----------------------------------------
 # PDF Generator
@@ -144,5 +150,6 @@ QUIZ QUESTIONS:
                     f,
                     file_name="Lecture_Notes.pdf"
                 )
+
 
 
