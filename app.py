@@ -18,7 +18,7 @@ st.subheader("Lecture Voice → Smart Notes Generator")
 @st.cache_resource
 def load_models():
     # Whisper Speech Recognition
-    speech_model = whisper.load_model("Tiny")
+    speech_model = whisper.load_model("tiny")
 
     # Hugging Face Summarization Model
     tokenizer = AutoTokenizer.from_pretrained("sshleifer/distilbart-cnn-12-6")
@@ -128,3 +128,4 @@ QUIZ:
         with open(pdf_file, "rb") as f:
 
             st.download_button("Click Here to Download", f, file_name="Lecture_Notes.pdf")
+
