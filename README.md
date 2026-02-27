@@ -48,3 +48,34 @@ It automatically:
 ```bash
 git clone https://github.com/Rakshitha-L/EduNoteAI-.git
 cd EduNoteAI-
+pip install -r requirements.txt
+streamlit run app.py
+🚀 Deployment
+
+This project can be deployed using:
+
+Streamlit Cloud
+
+HuggingFace Spaces
+
+📸 Demo
+
+Upload a lecture audio file and generate smart notes instantly!
+
+💡 Future Improvements
+
+Topic-wise segmentation
+
+Keyword extraction
+
+Flashcard generation
+
+Quiz generation
+
+Multi-language support
+
+👩‍💻 Developed By
+
+Rakshitha L
+AI & ML Enthusiast
+
