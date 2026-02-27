@@ -2,160 +2,158 @@ import streamlit as st
 import re
 from fpdf import FPDF
 
-# -------------------------------------------------
+# -----------------------------------------
 # Page Config
-# -------------------------------------------------
-st.set_page_config(page_title="EduNoteAI", layout="wide")
-st.title("🎓 EduNoteAI – Smart Lecture Notes Generator")
-st.subheader("Lecture Text → Structured Smart Notes")
+# -----------------------------------------
+st.set_page_config(page_title="EduNote AI", layout="wide")
+st.title("🎓 EduNote AI")
+st.subheader("Lecture Text → Smart Structured Notes Generator")
 
-# -------------------------------------------------
+# -----------------------------------------
 # Text Cleaning
-# -------------------------------------------------
+# -----------------------------------------
 def clean_text(text):
+    text = re.sub(r'\b(um|ah|okay|so|like)\b', '', text, flags=re.IGNORECASE)
     text = re.sub(r'\s+', ' ', text)
-    text = text.strip()
-    return text
+    return text.strip()
 
-# -------------------------------------------------
-# Smart Summary Generator
-# -------------------------------------------------
+# -----------------------------------------
+# Smart Summary (Better Compression)
+# -----------------------------------------
 def generate_summary(text):
     sentences = text.split(". ")
-    summary = ". ".join(sentences[:3])
-    return summary.strip() + "."
-
-# -------------------------------------------------
-# Key Points Generator
-# -------------------------------------------------
-def generate_keypoints(text):
-    sentences = text.split(". ")
-    keypoints = []
+    summary_sentences = []
 
     for sentence in sentences:
-        sentence = sentence.strip()
-        if len(sentence) > 50:
-            keypoints.append("• " + sentence)
-
-        if len(keypoints) == 6:
+        if len(sentence) > 60:
+            summary_sentences.append(sentence.strip())
+        if len(summary_sentences) == 3:
             break
 
-    return "\n".join(keypoints)
+    return ". ".join(summary_sentences) + "."
 
-# -------------------------------------------------
-# Important Terms Extractor
-# -------------------------------------------------
+# -----------------------------------------
+# Key Concepts Extractor
+# -----------------------------------------
+STOPWORDS = {
+    "While", "This", "That", "These", "Those",
+    "The", "And", "For", "With", "Such",
+    "Are", "Was", "Were", "From", "Into",
+    "Between", "However"
+}
+
+def extract_key_concepts(text):
+    words = re.findall(r'\b[A-Z][a-zA-Z]+\b', text)
+    concepts = []
+
+    for word in words:
+        if word not in STOPWORDS and len(word) > 5:
+            if word not in concepts:
+                concepts.append(word)
+        if len(concepts) == 5:
+            break
+
+    return concepts
+
+# -----------------------------------------
+# Important Terms
+# -----------------------------------------
 def extract_important_terms(text):
-    words = text.split()
+    words = re.findall(r'\b[A-Z][a-zA-Z]+\b', text)
     terms = []
 
     for word in words:
-        clean_word = re.sub(r'[^A-Za-z]', '', word)
-
-        if clean_word.istitle() and len(clean_word) > 4:
-            if clean_word not in terms:
-                terms.append(clean_word)
-
+        if word not in STOPWORDS and len(word) > 6:
+            if word not in terms:
+                terms.append(word)
         if len(terms) == 5:
             break
 
-    return ", ".join(terms)
+    return terms
 
-# -------------------------------------------------
-# Quiz Generator
-# -------------------------------------------------
+# -----------------------------------------
+# Quiz Generator (Better Style)
+# -----------------------------------------
 def generate_quiz(text):
-    keywords = []
-    words = text.split()
-
-    for word in words:
-        clean_word = re.sub(r'[^A-Za-z]', '', word)
-
-        if clean_word.istitle() and len(clean_word) > 4:
-            if clean_word not in keywords:
-                keywords.append(clean_word)
-
-        if len(keywords) == 3:
-            break
-
+    sentences = text.split(". ")
     questions = []
-    for word in keywords:
-        questions.append(f"1. What is the significance of {word} in this topic?")
 
-    return "\n\n".join(questions)
+    for sentence in sentences[:3]:
+        if len(sentence) > 50:
+            questions.append(f"Explain the following concept:\n{sentence.strip()}?")
 
-# -------------------------------------------------
+    return questions
+
+# -----------------------------------------
 # PDF Generator
-# -------------------------------------------------
+# -----------------------------------------
 def generate_pdf(content):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
     pdf.multi_cell(0, 8, content)
-
     file_path = "Smart_Lecture_Notes.pdf"
     pdf.output(file_path)
     return file_path
 
-# -------------------------------------------------
-# User Input
-# -------------------------------------------------
+# -----------------------------------------
+# Input Area
+# -----------------------------------------
 lecture_text = st.text_area("📚 Paste Your Lecture Text Here", height=250)
 
-if st.button("Generate Smart Notes"):
+if lecture_text:
 
-    if lecture_text.strip() == "":
-        st.warning("Please paste lecture text first.")
-    else:
-        cleaned = clean_text(lecture_text)
+    cleaned_text = clean_text(lecture_text)
 
-        summary = generate_summary(cleaned)
-        keypoints = generate_keypoints(cleaned)
-        terms = extract_important_terms(cleaned)
-        quiz = generate_quiz(cleaned)
+    st.subheader("📄 Cleaned Text")
+    st.write(cleaned_text)
 
-        # -------------------------------------------------
-        # Display Output
-        # -------------------------------------------------
-        st.markdown("## 📄 Cleaned Text")
-        st.write(cleaned)
+    # Generate Smart Notes
+    summary = generate_summary(cleaned_text)
+    key_concepts = extract_key_concepts(cleaned_text)
+    important_terms = extract_important_terms(cleaned_text)
+    quiz_questions = generate_quiz(cleaned_text)
 
-        st.markdown("## 📝 Smart Summary")
-        st.write(summary)
+    # -----------------------------------------
+    # Display Results
+    # -----------------------------------------
+    st.subheader("📝 Smart Summary")
+    st.write(summary)
 
-        st.markdown("## 📌 Key Concepts")
-        st.text(keypoints)
+    st.subheader("📌 Key Concepts")
+    for concept in key_concepts:
+        st.write(f"• {concept}")
 
-        st.markdown("## 🧠 Important Terms")
-        st.write(terms)
+    st.subheader("🧠 Important Terms")
+    st.write(", ".join(important_terms))
 
-        st.markdown("## ❓ Quiz Questions")
-        st.text(quiz)
+    st.subheader("❓ Quiz Questions")
+    for i, question in enumerate(quiz_questions, 1):
+        st.write(f"{i}. {question}")
 
-        # -------------------------------------------------
-        # PDF Download
-        # -------------------------------------------------
-        if st.button("Download as PDF"):
-            full_content = f"""
-SMART LECTURE NOTES
-
-SUMMARY:
+    # -----------------------------------------
+    # Download PDF
+    # -----------------------------------------
+    if st.button("Download Notes as PDF"):
+        full_content = f"""
+SMART SUMMARY:
 {summary}
 
-KEY POINTS:
-{keypoints}
+KEY CONCEPTS:
+{chr(10).join(['• ' + c for c in key_concepts])}
 
 IMPORTANT TERMS:
-{terms}
+{', '.join(important_terms)}
 
 QUIZ QUESTIONS:
-{quiz}
+{chr(10).join([str(i+1) + '. ' + q for i, q in enumerate(quiz_questions)])}
 """
-            pdf_file = generate_pdf(full_content)
 
-            with open(pdf_file, "rb") as f:
-                st.download_button(
-                    "Click to Download PDF",
-                    f,
-                    file_name="Smart_Lecture_Notes.pdf"
-                )
+        pdf_file = generate_pdf(full_content)
+
+        with open(pdf_file, "rb") as f:
+            st.download_button(
+                "Click Here to Download",
+                f,
+                file_name="Smart_Lecture_Notes.pdf"
+            )
