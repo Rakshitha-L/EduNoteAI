@@ -1,38 +1,50 @@
-📚 EduNoteAI – AI Powered Lecture Note Generator
-🚀 Overview
+# 📚 EduNoteAI – AI Powered Lecture Note Generator 🚀
 
-EduNoteAI converts lecture audio into structured notes using:
+## 🌟 Overview
+EduNoteAI is an AI-powered web application that converts lecture audio into structured smart notes using state-of-the-art AI models.
 
-OpenAI Whisper (Speech-to-Text)
+It automatically:
+- 🎙 Converts speech to text
+- 🧠 Generates summarized notes
+- 📄 Exports notes as PDF
 
-Transformers (Summarization)
+---
 
-Streamlit (Frontend UI)
+## 🧠 AI Models Used
 
-PDF generation
+- 🎤 **OpenAI Whisper (tiny model)** – Speech-to-Text
+- 🤖 **sshleifer/distilbart-cnn-12-6** – Text Summarization
+- ⚡ Powered using HuggingFace Transformers
 
-🧠 Features
+---
 
-Upload lecture audio
+## ✨ Features
 
-Automatic transcription
+- Upload lecture audio (.mp3 / .wav)
+- Automatic transcription
+- AI-powered summarization
+- Clean structured notes
+- Download notes as PDF
+- Streamlit-based interactive UI
 
-AI-powered summarization
+---
 
-Download notes as PDF
+## 🛠 Tech Stack
 
-🛠 Tech Stack
+| Component | Technology |
+|------------|------------|
+| Frontend | Streamlit |
+| Speech-to-Text | OpenAI Whisper |
+| NLP | HuggingFace Transformers |
+| Deep Learning | PyTorch |
+| PDF Export | FPDF |
+| Deployment | Streamlit Cloud |
 
-Python
+---
 
-Streamlit
+## 📦 Installation (Run Locally)
 
-Transformers
-
-Whisper
-
-Torch
-
-
-pip install -r requirements.txt
-streamlit run app.py
+### 1️⃣ Clone the repository
+```bash
+git clone https://github.com/Rakshitha-L/EduNoteAI-.git
+cd EduNoteAI-
